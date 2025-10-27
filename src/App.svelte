@@ -9,10 +9,6 @@
   import Portal from "svelte-portal";
   import copyExample from "./lib/example.png";
 
-  const 샘플데이터json = `[{"uuid":"175e0a7c-ec8a-4cc0-9e77-80af8ef2c281","collapsed":false,"productInfo":{"itemType":0,"useprop":false,"sell_price":0,"dome_price":0,"qty":0,"margin":0,"total_dome":0,"soldout":false},"deliveryInfo":{}},{"uuid":"51094377-b4bc-48c6-af7c-f93e9531bac3","collapsed":false,"productInfo":{"itemType":0,"useprop":false,"sell_price":0,"dome_price":0,"qty":0,"margin":0,"total_dome":0,"soldout":false},"deliveryInfo":{}},{"uuid":"95ae3f65-0135-4d40-b298-57538d9d7385","collapsed":false,"productInfo":{"itemType":0,"useprop":false,"sell_price":0,"dome_price":0,"qty":0,"margin":0,"total_dome":0,"soldout":false},"deliveryInfo":{}}]`;
-  const 샘플데이터 = $state(JSON.parse(샘플데이터json));
-  $inspect(샘플데이터);
-
   type 배송형태종류타입 = (typeof 배송형태종류)[number];
 
   type 품목리스트항목타입 = {
@@ -56,9 +52,9 @@
   const 배송형태종류 = ["익일수령택배", "방문수령", "퀵착불", "퀵선불", "대리배송", "전자배송", ""] as const;
   let 배송형태: 배송형태종류타입 | undefined = $state();
 
-  let 품목리스트: 품목리스트항목타입[] = $state(샘플데이터);
+  let 품목리스트: 품목리스트항목타입[] = $state([]);
 
-  let 어드민: boolean = $state(true);
+  let 어드민: boolean = $state(false);
   let 작성자: string | undefined = $state();
   let 발주제품군: string | undefined = $state();
   let 사업자변경: boolean = $state(false);
@@ -123,7 +119,7 @@
       await navigator.clipboard.writeText(복사양식);
       Swal.fire({
         title: "클립보드에 복사되었습니다.",
-        html: "",
+        html: "<br />",
         confirmButtonColor: "#e53935",
         icon: "success",
         confirmButtonText: "확인",
@@ -382,10 +378,7 @@
     }
   }
 
-  const isHTMLElement = (element: any) => element instanceof HTMLElement || element instanceof HTMLInputElement;
-
   onMount(async () => {
-    배송형태 = "대리배송";
     //@ts-ignore
     if (window.getDeliveryType) 배송형태 = window.getDeliveryType();
 
@@ -400,20 +393,15 @@
 
     //@ts-ignore
     if (window.getMemberName) 작성자 = window.getMemberName();
-    작성자 = "사운드캣";
 
     //@ts-ignore
     if (window.getOrderProductType) 발주제품군 = window.getOrderProductType();
-    발주제품군 = "프로오디오";
 
     //@ts-ignore
     if (window.getChangeSaupja) 사업자변경 = window.getChangeSaupja();
-    사업자변경 = true;
 
     //@ts-ignore
     if (window.getSaupja) [사업자명, 사업자등록번호] = window.getSaupja();
-    사업자명 = "페이퍼컴퍼니";
-    사업자등록번호 = "123-412-341234";
   });
 
   $effect(() => {
@@ -555,6 +543,7 @@
               ><input
                 type="checkbox"
                 id="출고처리_{인덱스}"
+                disabled={!어드민}
                 onchange={() => {
                   품목.finished = !품목.finished;
                   if (어드민) 품목.collapsed = 품목.finished;
