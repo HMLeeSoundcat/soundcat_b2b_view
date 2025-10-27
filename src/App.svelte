@@ -9,6 +9,10 @@
   import type SwalType from "sweetalert2";
   import Portal from "svelte-portal";
 
+  const 샘플데이터json = `[{"uuid":"175e0a7c-ec8a-4cc0-9e77-80af8ef2c281","collapsed":false,"productInfo":{"itemType":0,"useprop":false,"sell_price":0,"dome_price":0,"qty":0,"margin":0,"total_dome":0,"soldout":false},"deliveryInfo":{}},{"uuid":"51094377-b4bc-48c6-af7c-f93e9531bac3","collapsed":false,"productInfo":{"itemType":0,"useprop":false,"sell_price":0,"dome_price":0,"qty":0,"margin":0,"total_dome":0,"soldout":false},"deliveryInfo":{}},{"uuid":"95ae3f65-0135-4d40-b298-57538d9d7385","collapsed":false,"productInfo":{"itemType":0,"useprop":false,"sell_price":0,"dome_price":0,"qty":0,"margin":0,"total_dome":0,"soldout":false},"deliveryInfo":{}}]`;
+  const 샘플데이터 = $state(JSON.parse(샘플데이터json));
+  $inspect(샘플데이터);
+
   type 배송형태종류타입 = (typeof 배송형태종류)[number];
 
   type 품목리스트항목타입 = {
@@ -16,6 +20,8 @@
     productInfo: 제품정보타입;
     deliveryInfo: 배송정보타입;
     collapsed: boolean;
+    editable?: boolean;
+    finished?: boolean;
   };
 
   type 제품정보타입 = {
@@ -42,10 +48,6 @@
     addr3: string | undefined;
     postcode: string | undefined;
     msg: string | undefined;
-  };
-
-  type 전체품목리스트 = {
-    [key: string]: 개별품목정보[];
   };
 
   type 개별품목정보 = {
@@ -78,12 +80,10 @@
   let 발주서상태: string = $state("대기");
   let 컨테이너 = $state();
 
-  let 전체품목: 전체품목리스트 = $state({} as 전체품목리스트);
-
   const 배송형태종류 = ["익일수령택배", "방문수령", "퀵착불", "퀵선불", "대리배송", "전자배송", ""] as const;
   let 배송형태: 배송형태종류타입 | undefined = $state();
 
-  let 품목리스트: 품목리스트항목타입[] = $state([]);
+  let 품목리스트: 품목리스트항목타입[] = $state(샘플데이터);
 
   async function 가격계산(e: Event, 품목: 품목리스트항목타입, 필드: string) {
     const 가능한필드 = ["소비자가", "공급단가", "수량", "마진"];
@@ -151,6 +151,8 @@
     {#each 품목리스트 as 품목, 인덱스 (품목.uuid)}
       <div
         class="prod_item"
+        class:editable={품목.editable}
+        class:finished={품목.finished}
         transition:fly={{ y: -10, duration: 100 }}>
         <div class="app_header">
           <button
@@ -192,7 +194,19 @@
               <span>데모(50%)</span>
             </label>
           </div>
-          <div class="action">출고 처리</div>
+          <div class="gap">&nbsp;</div>
+          <div class="action">
+            <label for="임시편집_{인덱스}"
+              ><input
+                type="checkbox"
+                id="임시편집_{인덱스}"
+                onchange={() => (품목.editable = !품목.editable)} /> 임시편집</label>
+            <label for="출고처리_{인덱스}"
+              ><input
+                type="checkbox"
+                id="출고처리_{인덱스}"
+                onchange={() => (품목.finished = !품목.finished)} /> 출고처리</label>
+          </div>
         </div>
         {#if !품목.collapsed}
           <div
@@ -358,7 +372,7 @@
                     type="text"
                     id="id_{인덱스}_sell_price"
                     value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.sell_price))}
-                    readonly />
+                    readonly={!품목.editable} />
                 </div>
               </div>
               <div
@@ -378,7 +392,8 @@
                     value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.dome_price))}
                     oninput={e => {
                       가격계산(e, 품목, "공급단가");
-                    }} />
+                    }}
+                    readonly={!품목.editable} />
                 </div>
               </div>
               <div
@@ -400,7 +415,8 @@
                     value={new Intl.NumberFormat("ko-KR").format(Math.floor(Number(품목.productInfo.qty)))}
                     oninput={e => {
                       가격계산(e, 품목, "수량");
-                    }} />
+                    }}
+                    readonly={!품목.editable} />
                 </div>
               </div>
               <div
@@ -417,7 +433,8 @@
                   value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.margin))}
                   oninput={e => {
                     가격계산(e, 품목, "마진");
-                  }} />
+                  }}
+                  readonly={!품목.editable} />
               </div>
               <div
                 class="app_col"
@@ -474,6 +491,9 @@
   .block {
     display: block;
   }
+  .gap {
+    flex-grow: 1;
+  }
 
   .app_label {
     font-weight: bolder;
@@ -482,6 +502,26 @@
 
   .prod_item {
     border: 1px solid #ddd;
+  }
+
+  @keyframes editable_active {
+    0% {
+      background: yellow;
+    }
+    100% {
+      background: rgb(220, 243, 255);
+    }
+  }
+
+  .prod_item.editable input {
+    animation: editable_active 0.3s linear 0s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: 1;
+  }
+
+  .prod_item.finished {
+    filter: brightness(0.7);
+    background: #0005;
   }
 
   .app_header {
@@ -591,10 +631,6 @@
     flex-basis: calc(var(--flex-basis) - 1em);
   }
 
-  .postcodebox {
-    border: 1px solid #ddd;
-    margin-bottom: 1em;
-  }
   input {
     box-sizing: border-box;
     border-color: #ddd;
@@ -636,22 +672,6 @@
   }
   button:active {
     background: rgb(151, 160, 170);
-  }
-
-  .excelLoading {
-    position: relative;
-  }
-  .excelLoading::after {
-    position: absolute;
-    content: "엑셀 데이터를 읽고 있습니다...";
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff6;
-    top: 0;
-    left: 0;
   }
 
   @media screen and (max-width: 640px) {
