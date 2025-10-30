@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { fly } from "svelte/transition";
   import type SwalType from "sweetalert2";
   import Portal from "svelte-portal";
@@ -53,6 +53,7 @@
   let 배송형태: 배송형태종류타입 | undefined = $state();
 
   let 품목리스트: 품목리스트항목타입[] = $state([]);
+  $inspect(품목리스트);
 
   let 어드민: boolean = $state(false);
   let 작성자: string | undefined = $state();
@@ -92,7 +93,7 @@
         break;
       case "공급단가":
         품목리스트[인덱스].productInfo.dome_price = 숫자값;
-        품목리스트[인덱스].productInfo.margin = 계산_마진(숫자값, Number(품목리스트[인덱스].productInfo.sell_price));
+        품목리스트[인덱스].productInfo.margin = 계산_마진(Number(품목리스트[인덱스].productInfo.sell_price), 숫자값);
         break;
       case "마진":
         품목리스트[인덱스].productInfo.margin = 숫자값;
@@ -109,10 +110,10 @@
   async function 배송정보복사(품목: 품목리스트항목타입 | 품목리스트항목타입[]) {
     if (Array.isArray(품목)) {
       복사양식 = 품목.reduce((acc, cur) => {
-        return acc + "\n" + [cur.deliveryInfo.name, cur.deliveryInfo.postcode, [cur.deliveryInfo.addr1, cur.deliveryInfo.addr2, cur.deliveryInfo.addr3].join(" "), cur.deliveryInfo.hp1, cur.deliveryInfo.hp2, 작성자, cur.productInfo.product, cur.productInfo.qty, cur.deliveryInfo.msg].join("\t");
+        return acc + "\n" + [cur.deliveryInfo.name, cur.deliveryInfo.postcode, [cur.deliveryInfo.addr1, cur.deliveryInfo.addr2, cur.deliveryInfo.addr3].join(" "), cur.deliveryInfo.hp1, cur.deliveryInfo.hp2, 사업자명, cur.productInfo.product, cur.productInfo.qty, cur.deliveryInfo.msg].join("\t");
       }, "");
     } else {
-      복사양식 = [품목.deliveryInfo.name, 품목.deliveryInfo.postcode, [품목.deliveryInfo.addr1, 품목.deliveryInfo.addr2, 품목.deliveryInfo.addr3].join(" "), 품목.deliveryInfo.hp1, 품목.deliveryInfo.hp2, 작성자, 품목.productInfo.product, 품목.productInfo.qty, 품목.deliveryInfo.msg].join("\t");
+      복사양식 = [품목.deliveryInfo.name, 품목.deliveryInfo.postcode, [품목.deliveryInfo.addr1, 품목.deliveryInfo.addr2, 품목.deliveryInfo.addr3].join(" "), 품목.deliveryInfo.hp1, 품목.deliveryInfo.hp2, 사업자명, 품목.productInfo.product, 품목.productInfo.qty, 품목.deliveryInfo.msg].join("\t");
     }
 
     try {
@@ -194,14 +195,14 @@
                 CUST: 사업자등록번호?.replaceAll("-", ""),
                 EMP_CD: 전표담당자명,
                 WH_CD: 출하창고.value,
-                U_MEMO2: 배송형태 == "방문수령" ? "오부장님 용산 수령" : (document.querySelector("#type") as HTMLInputElement).value,
+                U_MEMO2: 배송형태 == "방문수령" ? "오부장님 용산 수령" : 배송형태,
                 PROD_CD: 품목리스트[i].productInfo.PROD_CD,
                 PROD_DES: 품목리스트[i].productInfo.product,
                 SIZE_DES: (품목리스트[i].productInfo.itemType == 1 ? "DEMO 40%" : 품목리스트[i].productInfo.itemType == 2 ? "DEMO 50%" : "") + (품목리스트[i].productInfo.prop && ", " + 품목리스트[i].productInfo.prop),
                 QTY: 품목리스트[i].productInfo.qty,
-                PRICE: Number(품목리스트[i].productInfo.dome_price ?? 0 / 1.1).toFixed(5),
-                SUPPLY_AMT: Number(품목리스트[i].productInfo.total_dome ?? 0 / 1.1).toFixed(5),
-                VAT_AMT: Number(품목리스트[i].productInfo.dome_price ?? 0) - Number(Number(품목리스트[i].productInfo.dome_price ?? 0 / 1.1).toFixed(5)),
+                PRICE: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0 / 1.1)),
+                SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.total_dome ?? 0 / 1.1)),
+                VAT_AMT: Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0 / 1.1)),
                 REMARKS: 배송형태 == "대리배송" ? 품목리스트[i].deliveryInfo.name : "",
               },
             });
@@ -217,9 +218,9 @@
                 PROD_CD: "shipping1",
                 PROD_DES: "[택배비]",
                 QTY: 품목리스트.length,
-                PRICE: 5454.545454,
-                SUPPLY_AMT: Number((6000 / 1.1).toFixed(0)) * 품목리스트.length,
-                VAT_AMT: (6000 - Number((6000 / 1.1).toFixed(0))) * 품목리스트.length,
+                PRICE: Math.round(6000 / 1.1),
+                SUPPLY_AMT: Math.round(6000 / 1.1) * 품목리스트.length,
+                VAT_AMT: (6000 - Math.round(6000 / 1.1)) * 품목리스트.length,
                 REMARKS: "",
               },
             });
@@ -308,10 +309,10 @@
                 ,
                 // prod_serial
                 cur.productInfo.qty, // prod_count
-                Number(cur.productInfo.dome_price ?? 0 / 1.1).toFixed(5), // prod_price
+                Math.round(cur.productInfo.dome_price ?? 0 / 1.1), // prod_price
                 0, // prod_curr_price
-                Number(cur.productInfo.total_dome ?? 0 / 1.1).toFixed(5), // prod_sup_price
-                Number(cur.productInfo.dome_price ?? 0) - Number(Number(cur.productInfo.dome_price ?? 0 / 1.1).toFixed(5)), // prod_vat
+                Math.round(cur.productInfo.total_dome ?? 0 / 1.1), // prod_sup_price
+                Math.round(cur.productInfo.dome_price ?? 0) - Math.round(cur.productInfo.dome_price ?? 0 / 1.1), // prod_vat
                 배송형태 == "대리배송" ? cur.deliveryInfo.name : "",
               ].join("\t")
             );
@@ -344,35 +345,35 @@
                 // prod_size
                 // prod_serial
                 품목리스트.length, // prod_count
-                "5,454.545454", // prod_price
+                Math.round(6000 / 1.1), // prod_price
                 0, // prod_curr_price
-                Number((6000 / 1.1).toFixed(0)) * 품목리스트.length, // prod_sup_price
-                (6000 - Number((6000 / 1.1).toFixed(0))) * 품목리스트.length, // prod_vat
+                Math.round(6000 / 1.1) * 품목리스트.length, // prod_sup_price
+                6000 - Math.round(6000 / 1.1), // prod_vat
                 "",
               ].join("\t");
-            setTimeout(function () {
-              navigator.clipboard
-                .writeText(복사양식)
-                .then(() => {
-                  Swal.fire({
-                    title: "웹자료 올리기 데이터가 복사되었습니다",
-                    html: "이카운트 > 주문서입력 > 웹자료올리기 버튼을 누르고<br />첫번째 칸에 붙여넣으세요.",
-                    confirmButtonText: "닫기",
-                    icon: "success",
-                    timer: 5000,
-                    timerProgressBar: true,
-                  });
-                })
-                .catch(err => {
-                  Swal.fire({
-                    title: "복사에 실패했습니다",
-                    html: "사유: <br />" + err,
-                    confirmButtonText: "닫기",
-                    icon: "error",
-                  });
-                });
-            }, 300);
           }
+          setTimeout(function () {
+            navigator.clipboard
+              .writeText(복사양식)
+              .then(() => {
+                Swal.fire({
+                  title: "웹자료 올리기 데이터가 복사되었습니다",
+                  html: "이카운트 > 주문서입력 > 웹자료올리기 버튼을 누르고<br />첫번째 칸에 붙여넣으세요.",
+                  confirmButtonText: "닫기",
+                  icon: "success",
+                  timer: 5000,
+                  timerProgressBar: true,
+                });
+              })
+              .catch(err => {
+                Swal.fire({
+                  title: "복사에 실패했습니다",
+                  html: "사유: <br />" + err,
+                  confirmButtonText: "닫기",
+                  icon: "error",
+                });
+              });
+          }, 300);
         }
       }
     }
@@ -405,8 +406,11 @@
   });
 
   $effect(() => {
+    const signature = 품목리스트.map(i => {
+      return { ...i };
+    });
     //@ts-ignore
-    if (품목리스트 && window.setData) window.setData(품목리스트);
+    if (품목리스트 && window.setData) window.setData($state.snapshot(품목리스트));
   });
 </script>
 
@@ -544,9 +548,12 @@
                 type="checkbox"
                 id="출고처리_{인덱스}"
                 disabled={!어드민}
+                bind:checked={품목.finished}
                 onchange={() => {
-                  품목.finished = !품목.finished;
-                  if (어드민) 품목.collapsed = 품목.finished;
+                  if (!어드민) return;
+                  품목.collapsed = 품목.finished ?? false;
+                  //@ts-ignore
+                  if (window.finish_order_btn) window.finish_order_btn(품목.uuid);
                 }} /> 출고처리</label>
           </div>
         </div>
@@ -667,6 +674,7 @@
                   type="text"
                   class="noteditable"
                   id="id_{인덱스}_brand"
+                  onpointerup={e => e.currentTarget.select()}
                   bind:value={품목.productInfo.brand}
                   readonly />
               </div>
@@ -676,12 +684,40 @@
                 <div>
                   <label
                     for="id_{인덱스}_product"
-                    class="app_label block">품목명</label>
+                    class="app_label block"
+                    >품목명 <span style="font-size: 0.9em;font-weight: normal"
+                      ><code>({품목.productInfo.PROD_CD})</code>
+                      <button
+                        class="text_btn"
+                        onclick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(품목.productInfo.PROD_CD ?? "etc_001");
+                            Swal.fire({
+                              title: "클립보드에 복사되었습니다.",
+                              text: !품목.productInfo.PROD_CD ? "품목코드 정보가 누락되어 etc_001로 복사되었습니다." : "",
+                              icon: "success",
+                              showConfirmButton: false,
+                              timer: 3000,
+                              toast: true,
+                              position: "top",
+                              customClass: {
+                                htmlContainer: "prodcdCopy",
+                                container: "prodcdCopy_cont",
+                              },
+                            });
+                          } catch (err) {
+                            console.error("복사 실패", err);
+                            alert("복사 실패: \n" + err);
+                          }
+                        }}>복사</button
+                      ></span
+                    ></label>
                 </div>
                 <input
                   type="text"
                   class="noteditable"
                   id="id_{인덱스}_product"
+                  onpointerup={e => e.currentTarget.select()}
                   bind:value={품목.productInfo.product}
                   readonly />
               </div>
@@ -697,6 +733,7 @@
                   <input
                     type="text"
                     id="id_{인덱스}_prop"
+                    onpointerup={e => e.currentTarget.select()}
                     bind:value={품목.productInfo.prop} />
                 </div>
               {/if}
@@ -718,6 +755,7 @@
                     oninput={e => {
                       가격계산(e, 품목, "소비자가");
                     }}
+                    onpointerup={e => e.currentTarget.select()}
                     readonly={!품목.editable} />
                 </div>
               </div>
@@ -739,6 +777,7 @@
                     oninput={e => {
                       가격계산(e, 품목, "공급단가");
                     }}
+                    onpointerup={e => e.currentTarget.select()}
                     readonly={!품목.editable} />
                 </div>
               </div>
@@ -762,6 +801,7 @@
                     oninput={e => {
                       가격계산(e, 품목, "수량");
                     }}
+                    onpointerup={e => e.currentTarget.select()}
                     readonly={!품목.editable} />
                 </div>
               </div>
@@ -780,6 +820,7 @@
                   oninput={e => {
                     가격계산(e, 품목, "마진");
                   }}
+                  onpointerup={e => e.currentTarget.select()}
                   readonly={!품목.editable} />
               </div>
               <div
@@ -797,6 +838,7 @@
                     type="text"
                     id="id_{인덱스}_total_dome"
                     value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.total_dome))}
+                    onpointerup={e => e.currentTarget.select()}
                     readonly />
                 </div>
               </div>
@@ -1041,6 +1083,17 @@
   }
   button:active {
     background: rgb(151, 160, 170);
+  }
+
+  .text_btn {
+    background: none;
+    text-decoration: underline;
+    color: blue;
+    border: none;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    cursor: pointer;
   }
 
   @media screen and (max-width: 640px) {
