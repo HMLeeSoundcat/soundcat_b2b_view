@@ -8,6 +8,7 @@
   import type SwalType from "sweetalert2";
   import Portal from "svelte-portal";
   import copyExample from "./lib/example.png";
+  import { asClassComponent } from "svelte/legacy";
 
   type 배송형태종류타입 = (typeof 배송형태종류)[number];
 
@@ -18,6 +19,7 @@
     collapsed: boolean;
     editable?: boolean;
     finished?: boolean;
+    passed?: -1 | 0 | 1 | 2;
   };
 
   type 제품정보타입 = {
@@ -46,6 +48,36 @@
     msg: string | undefined;
   };
 
+  type 재고조회결과 = {
+    Status: string;
+    Data: {
+      Result:
+        | {
+            WH_CD: string;
+            WH_DES: string;
+            PROD_CD: string;
+            PROD_DES: string;
+            PROD_SIZE_DES: string;
+            BAL_QTY: number;
+          }[]
+        | null;
+    } | null;
+    Errors:
+      | {
+          ProgramId: string;
+          Name: string;
+          Code: string;
+          Message: string;
+          Param: any;
+        }[]
+      | null;
+    Error: {
+      Code: number;
+      Message: string;
+      MessageDetail: string;
+    } | null;
+  };
+
   let 발주서상태: string = $state("대기");
   let 컨테이너 = $state();
 
@@ -53,7 +85,6 @@
   let 배송형태: 배송형태종류타입 | undefined = $state();
 
   let 품목리스트: 품목리스트항목타입[] = $state([]);
-  $inspect(품목리스트);
 
   let 어드민: boolean = $state(false);
   let 작성자: string | undefined = $state();
@@ -110,7 +141,7 @@
   async function 배송정보복사(품목: 품목리스트항목타입 | 품목리스트항목타입[]) {
     if (Array.isArray(품목)) {
       복사양식 = 품목.reduce((acc, cur) => {
-        return acc + "\n" + [cur.deliveryInfo.name, cur.deliveryInfo.postcode, [cur.deliveryInfo.addr1, cur.deliveryInfo.addr2, cur.deliveryInfo.addr3].join(" "), cur.deliveryInfo.hp1, cur.deliveryInfo.hp2, 사업자명, cur.productInfo.product, cur.productInfo.qty, cur.deliveryInfo.msg].join("\t");
+        return acc + (acc ? "\n" : "") + [cur.deliveryInfo.name, cur.deliveryInfo.postcode, [cur.deliveryInfo.addr1, cur.deliveryInfo.addr2, cur.deliveryInfo.addr3].join(" "), cur.deliveryInfo.hp1, cur.deliveryInfo.hp2, 사업자명, cur.productInfo.product, cur.productInfo.qty, cur.deliveryInfo.msg].join("\t");
       }, "");
     } else {
       복사양식 = [품목.deliveryInfo.name, 품목.deliveryInfo.postcode, [품목.deliveryInfo.addr1, 품목.deliveryInfo.addr2, 품목.deliveryInfo.addr3].join(" "), 품목.deliveryInfo.hp1, 품목.deliveryInfo.hp2, 사업자명, 품목.productInfo.product, 품목.productInfo.qty, 품목.deliveryInfo.msg].join("\t");
@@ -142,7 +173,42 @@
     }
   }
 
+  async function 품목재고파악(품목: 품목리스트항목타입) {
+    //@ts-ignore
+    if (window.get_stock) {
+      //@ts-ignore
+      const 결과: 재고조회결과 = await window.get_stock(품목);
+      if (결과.Data?.Result && 결과.Data.Result[0].PROD_CD == 품목.productInfo.PROD_CD) {
+        const 차이 = 결과.Data.Result[0].BAL_QTY - (품목.productInfo.qty ?? 0);
+        if (차이 > 20) {
+          품목.passed = 1;
+        } else if (차이 >= 0) {
+          품목.passed = 2;
+        } else {
+          품목.passed = 0;
+        }
+      } else {
+        품목.passed = -1;
+      }
+    }
+  }
+
   async function erp_copy(api = false) {
+    const 재고부족알림필요 = 품목리스트.reduce((acc: boolean, cur: 품목리스트항목타입) => {
+      {
+        if ((acc == false && !cur.passed) || (cur.passed && cur.passed <= 0)) acc = true;
+        return acc;
+      }
+    }, false);
+
+    if (재고부족알림필요) {
+      await Swal.fire({
+        icon: "warning",
+        title: "알림!",
+        text: "재고 확인이 실패했거나 재고가 부족 또는 없는 항목이 있습니다. 주문서 등록 후 재고를 확인하시기 바랍니다.",
+        confirmButtonText: "확인",
+      });
+    }
     let 전표담당자명 = "";
     const 전표담당자입력 = await Swal.fire({
       title: "전표에 삽입할 담당자 이름을 입력하세요.",
@@ -176,16 +242,13 @@
           if (!value) return "출하창고를 선택해야 합니다!";
         },
         didOpen: () => {
-          document.querySelector(".swal2-radio label input")?.addEventListener("dblclick", () => {
+          document.querySelector(".swal2-radio label")?.addEventListener("dblclick", () => {
             (document.querySelector(".swal2-confirm") as HTMLButtonElement).click();
           });
-          document.querySelector(".swal2-radio label span")?.addEventListener("dblclick", () => {
-            (document.querySelector(".swal2-confirm") as HTMLButtonElement).click();
-          });
+          if (document.querySelector(".swal2-radio label:nth-child(1) input")) (document.querySelector(".swal2-radio label:nth-child(1) input") as HTMLInputElement).checked = true;
         },
       });
       if (출하창고.value) {
-        console.log(전표담당자명);
         if (api) {
           let bulkDatas = new Array();
           for (let i = 0; i < 품목리스트.length; i++) {
@@ -198,10 +261,10 @@
                 U_MEMO2: 배송형태 == "방문수령" ? "오부장님 용산 수령" : 배송형태,
                 PROD_CD: 품목리스트[i].productInfo.PROD_CD,
                 PROD_DES: 품목리스트[i].productInfo.product,
-                SIZE_DES: (품목리스트[i].productInfo.itemType == 1 ? "DEMO 40%" : 품목리스트[i].productInfo.itemType == 2 ? "DEMO 50%" : "") + (품목리스트[i].productInfo.prop && ", " + 품목리스트[i].productInfo.prop),
+                SIZE_DES: (품목리스트[i].productInfo.itemType == 1 ? "DEMO 40%" : 품목리스트[i].productInfo.itemType == 2 ? "DEMO 50%" : "") + (품목리스트[i].productInfo.prop ? ", " + 품목리스트[i].productInfo.prop : ""),
                 QTY: 품목리스트[i].productInfo.qty,
-                PRICE: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0 / 1.1)),
-                SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.total_dome ?? 0 / 1.1)),
+                PRICE: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1),
+                SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.total_dome ?? 0) / 1.1),
                 VAT_AMT: Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0 / 1.1)),
                 REMARKS: 배송형태 == "대리배송" ? 품목리스트[i].deliveryInfo.name : "",
               },
@@ -305,14 +368,14 @@
                 // payment
                 cur.productInfo.PROD_CD, // prod_cd
                 cur.productInfo.product, // prod_des
-                (cur.productInfo.itemType == 1 ? "DEMO 40%" : cur.productInfo.itemType == 2 ? "DEMO 50%" : "") + cur.productInfo.prop && ", " + cur.productInfo.prop, // prod_size
+                (cur.productInfo.itemType == 1 ? "DEMO 40%" : cur.productInfo.itemType == 2 ? "DEMO 50%" : "") + (cur.productInfo.prop ? ", " + cur.productInfo.prop : ""), // prod_size
                 ,
                 // prod_serial
                 cur.productInfo.qty, // prod_count
-                Math.round(cur.productInfo.dome_price ?? 0 / 1.1), // prod_price
+                Math.round((cur.productInfo.dome_price ?? 0) / 1.1), // prod_price
                 0, // prod_curr_price
-                Math.round(cur.productInfo.total_dome ?? 0 / 1.1), // prod_sup_price
-                Math.round(cur.productInfo.dome_price ?? 0) - Math.round(cur.productInfo.dome_price ?? 0 / 1.1), // prod_vat
+                Math.round((cur.productInfo.total_dome ?? 0) / 1.1), // prod_sup_price
+                Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1), // prod_vat
                 배송형태 == "대리배송" ? cur.deliveryInfo.name : "",
               ].join("\t")
             );
@@ -495,7 +558,10 @@
         class="prod_item"
         class:editable={품목.editable}
         class:finished={품목.finished}
-        transition:fly={{ y: -10, duration: 100 }}>
+        transition:fly={{ y: -10, duration: 100 }}
+        {@attach () => {
+          품목재고파악(품목);
+        }}>
         <div class="app_header">
           <button
             type="button"
@@ -552,6 +618,9 @@
                 onchange={() => {
                   if (!어드민) return;
                   품목.collapsed = 품목.finished ?? false;
+
+                  const 진품목리스트인덱스 = 품목리스트.findIndex(x => x.uuid == 품목.uuid);
+                  if (진품목리스트인덱스 > 0) 품목리스트[진품목리스트인덱스].finished = 품목.finished;
                   //@ts-ignore
                   if (window.finish_order_btn) window.finish_order_btn(품목.uuid);
                 }} /> 출고처리</label>
@@ -709,9 +778,23 @@
                             console.error("복사 실패", err);
                             alert("복사 실패: \n" + err);
                           }
-                        }}>복사</button
-                      ></span
-                    ></label>
+                        }}>복사</button>
+
+                      {#if typeof 품목.passed == "undefined"}
+                        <span style="opacity: 0.7">(재고 확인 중...)</span>
+                      {:else if 품목.passed >= 0}
+                        {#if 품목.passed == 1}
+                          <span style="color: green">(수량 확인됨)</span>
+                        {:else if 품목.passed == 2}
+                          <span style="color: orange">(수량 부족 확인 필요)</span>
+                        {:else}
+                          <span style="color: red">(수량 부족 발주 불가)</span>
+                        {/if}
+                      {:else}
+                        <span>(재고 확인 실패)</span>
+                      {/if}
+                    </span>
+                  </label>
                 </div>
                 <input
                   type="text"
@@ -787,7 +870,9 @@
                 <div>
                   <label
                     for="id_{인덱스}_qty"
-                    class="app_label block">수량</label>
+                    class="app_label block"
+                    >수량
+                  </label>
                 </div>
                 <div
                   class="app_text_input"

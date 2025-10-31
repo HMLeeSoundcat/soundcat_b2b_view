@@ -34,6 +34,27 @@
       function setData(list) {
         console.log(list);
       }
+
+      async function get_stock(품목) {
+        try {
+          const 단건재고조회 = await fetch("https://b2b.soundcat.com/page/get_stock.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              key: 품목.productInfo.PROD_CD,
+              req: "soundcat",
+            }),
+          });
+
+          if (!단건재고조회.ok) throw new Error("재고 조회 서버 접속 실패");
+
+          return await 단건재고조회.json();
+        } catch (err) {
+          console.error("조회 실패: ", err);
+        }
+      }
     </script>
   </body>
 </html>
