@@ -178,7 +178,7 @@
     if (window.get_stock) {
       //@ts-ignore
       const 결과: 재고조회결과 = await window.get_stock(품목);
-      if (결과.Data?.Result && 결과.Data.Result[0].PROD_CD == 품목.productInfo.PROD_CD) {
+      if (결과.Data?.Result && 결과.Data?.Result.length && 결과.Data.Result[0].PROD_CD == 품목.productInfo.PROD_CD) {
         const 차이 = 결과.Data.Result[0].BAL_QTY - (품목.productInfo.qty ?? 0);
         if (차이 > 20) {
           품목.passed = 1;
