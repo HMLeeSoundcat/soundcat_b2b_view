@@ -265,7 +265,7 @@
                 QTY: 품목리스트[i].productInfo.qty,
                 PRICE: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1),
                 SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.total_dome ?? 0) / 1.1),
-                VAT_AMT: Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0 / 1.1)),
+                VAT_AMT: Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1),
                 REMARKS: 배송형태 == "대리배송" ? 품목리스트[i].deliveryInfo.name : "",
               },
             });
@@ -779,19 +779,20 @@
                             alert("복사 실패: \n" + err);
                           }
                         }}>복사</button>
-
-                      {#if typeof 품목.passed == "undefined"}
-                        <span style="opacity: 0.7">(재고 확인 중...)</span>
-                      {:else if 품목.passed >= 0}
-                        {#if 품목.passed == 1}
-                          <span style="color: green">(수량 확인됨)</span>
-                        {:else if 품목.passed == 2}
-                          <span style="color: orange">(수량 부족 확인 필요)</span>
+                      {#if 어드민}
+                        {#if typeof 품목.passed == "undefined"}
+                          <span style="opacity: 0.7">(재고 확인 중...)</span>
+                        {:else if 품목.passed >= 0}
+                          {#if 품목.passed == 1}
+                            <span style="color: green">(수량 확인됨)</span>
+                          {:else if 품목.passed == 2}
+                            <span style="color: orange">(수량 부족 확인 필요)</span>
+                          {:else}
+                            <span style="color: red">(수량 부족 발주 불가)</span>
+                          {/if}
                         {:else}
                           <span style="color: red">(수량 부족 발주 불가)</span>
                         {/if}
-                      {:else}
-                        <span>(재고 확인 실패)</span>
                       {/if}
                     </span>
                   </label>
