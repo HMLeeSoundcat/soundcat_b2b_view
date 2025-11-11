@@ -348,7 +348,7 @@
           let 복사양식 = 품목리스트.reduce((acc, cur) => {
             return (
               acc +
-              "\n" +
+              (acc ? "\n" : "") +
               [
                 today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
                 1, // order
@@ -569,7 +569,7 @@
             onclick={() => (품목.collapsed = !품목.collapsed)}
             aria-label="품목 접기/펼치기"
             title="품목 접기/펼치기">{@html 품목.collapsed ? `<i class="fas fa-chevron-right"></i>` : `<i class="fas fa-chevron-down"></i>`}</button>
-          <span><strong>품목{인덱스 + 1}</strong></span>
+          <span class="item_title"><strong>품목{인덱스 + 1}</strong></span><span class="hori_div"></span>
           <div class="radio_vertical">
             <label class="app_radio">
               <input
@@ -1111,6 +1111,17 @@
     box-sizing: border-box;
     background: #0001;
     border-radius: 0 6px 6px 0;
+  }
+
+  .item_title {
+    font-size: 1.3em;
+  }
+
+  .hori_div {
+    display: block;
+    width: 1px;
+    height: 2em;
+    background: #0002;
   }
 
   .app_body {
