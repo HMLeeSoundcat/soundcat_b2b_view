@@ -201,6 +201,10 @@
       }
     }, false);
 
+    const 신배송형태 = 배송형태 == "익일수령택배" ? "택배" : 배송형태 == "방문수령" ? "오부장님 용산 수령" : 배송형태;
+
+    if (!신배송형태) return;
+
     if (재고부족알림필요) {
       await Swal.fire({
         icon: "warning",
@@ -258,26 +262,26 @@
                 CUST: 사업자등록번호?.replaceAll("-", ""),
                 EMP_CD: 전표담당자명,
                 WH_CD: 출하창고.value,
-                U_MEMO2: 배송형태 == "방문수령" ? "오부장님 용산 수령" : 배송형태,
+                U_MEMO2: 신배송형태,
                 PROD_CD: 품목리스트[i].productInfo.PROD_CD,
                 PROD_DES: 품목리스트[i].productInfo.product,
                 SIZE_DES: (품목리스트[i].productInfo.itemType == 1 ? "DEMO 40%" : 품목리스트[i].productInfo.itemType == 2 ? "DEMO 50%" : "") + (품목리스트[i].productInfo.prop ? ", " + 품목리스트[i].productInfo.prop : ""),
                 QTY: 품목리스트[i].productInfo.qty,
                 PRICE: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1),
-                SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.total_dome ?? 0) / 1.1),
-                VAT_AMT: Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1),
-                REMARKS: 배송형태 == "대리배송" ? 품목리스트[i].deliveryInfo.name : "",
+                SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1) * Number(품목리스트[i].productInfo.qty),
+                VAT_AMT: (Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1)) * Number(품목리스트[i].productInfo.qty),
+                REMARKS: 신배송형태 == "대리배송" ? 품목리스트[i].deliveryInfo.name : "",
               },
             });
           }
-          if (배송형태 == "대리배송") {
+          if (신배송형태 == "대리배송") {
             bulkDatas.push({
               BulkDatas: {
                 UPLOAD_SER_NO: "1",
                 CUST: 사업자등록번호?.replaceAll("-", ""),
                 EMP_CD: 전표담당자명,
                 WH_CD: 출하창고.value,
-                U_MEMO2: 배송형태,
+                U_MEMO2: 신배송형태,
                 PROD_CD: "shipping1",
                 PROD_DES: "[택배비]",
                 QTY: 품목리스트.length,
@@ -353,13 +357,15 @@
                 today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
                 1, // order
                 사업자등록번호?.replaceAll("-", ""), // code
+                ,
+                //saupjaname
                 전표담당자명, // manager
                 출하창고.value, // warehouse
                 ,
                 ,
                 // type
                 // project
-                배송형태 == "방문수령" ? "오부장님 용산 수령" : 배송형태, // deliver
+                신배송형태, // deliver
                 ,
                 ,
                 ,
@@ -374,13 +380,13 @@
                 cur.productInfo.qty, // prod_count
                 Math.round((cur.productInfo.dome_price ?? 0) / 1.1), // prod_price
                 0, // prod_curr_price
-                Math.round((cur.productInfo.total_dome ?? 0) / 1.1), // prod_sup_price
-                Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1), // prod_vat
-                배송형태 == "대리배송" ? cur.deliveryInfo.name : "",
+                Math.round((cur.productInfo.dome_price ?? 0) / 1.1) * Number(cur.productInfo.qty), // prod_sup_price
+                (Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1)) * Number(cur.productInfo.qty), // prod_vat
+                신배송형태 == "대리배송" ? cur.deliveryInfo.name : "",
               ].join("\t")
             );
           }, "");
-          if (배송형태 == "대리배송") {
+          if (신배송형태 == "대리배송") {
             복사양식 =
               복사양식 +
               "\n" +
@@ -388,6 +394,8 @@
                 today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
                 1, // order
                 사업자등록번호?.replaceAll("-", ""), // code
+                ,
+                //saupjaname
                 전표담당자명, // manager
                 출하창고.value, // warehouse
                 ,
