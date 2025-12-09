@@ -3,12 +3,19 @@
 </script>
 
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onMount } from "svelte";
   import { fly } from "svelte/transition";
   import type SwalType from "sweetalert2";
   import Portal from "svelte-portal";
   import copyExample from "./lib/example.png";
-  import { asClassComponent } from "svelte/legacy";
+
+  // write 모듈과 거의 동일한데, 값 입력 기능이 빠지고 여러 입력에 필요한 기능들이 빠져 좀 더 가볍다.
+
+  /**
+   * ===============
+   * 타입 정의
+   * ===============
+   */
 
   type 배송형태종류타입 = (typeof 배송형태종류)[number];
 
@@ -77,6 +84,12 @@
       MessageDetail: string;
     } | null;
   };
+
+  /**
+   * ===================
+   * 타입 정의 끝
+   * ===================
+   */
 
   let 발주서상태: string = $state("대기");
   let 컨테이너 = $state();
