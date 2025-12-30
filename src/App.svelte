@@ -323,8 +323,6 @@
           allowOutsideClick: false,
         });
 
-        return;
-
         const erpApiResponse = await fetch("/page/save_saleorder.php?v2=true", {
           method: "POST",
           headers: {
