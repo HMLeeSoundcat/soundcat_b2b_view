@@ -227,6 +227,7 @@
       });
     }
     let 전표담당자명 = "";
+
     const 전표담당자입력 = await Swal.fire({
       title: "전표에 삽입할 담당자 이름을 입력하세요.",
       input: "text",
@@ -241,225 +242,245 @@
       },
     });
 
-    if (전표담당자명) {
-      const inputOptions = {
-        인천: "인천",
-        링고: "위탁(링고)",
-        소리: "위탁(소리샵)",
-        숲레: "위탁(숲레코드)",
-        사랩: "위탁(사운드랩스)",
-        하엔: "위탁(하이엔드오디오)",
-      };
-      const 출하창고 = await Swal.fire({
-        title: "출하창고를 선택하세요",
-        input: "radio",
-        inputOptions,
-        confirmButtonText: "선택 (더블클릭 쌉가능)",
-        inputValidator: value => {
-          if (!value) return "출하창고를 선택해야 합니다!";
-        },
-        didOpen: () => {
-          document.querySelector(".swal2-radio label")?.addEventListener("dblclick", () => {
-            (document.querySelector(".swal2-confirm") as HTMLButtonElement).click();
-          });
-          if (document.querySelector(".swal2-radio label:nth-child(1) input")) (document.querySelector(".swal2-radio label:nth-child(1) input") as HTMLInputElement).checked = true;
-        },
-      });
-      if (출하창고.value) {
-        if (api) {
-          let bulkDatas = new Array();
-          for (let i = 0; i < 품목리스트.length; i++) {
-            bulkDatas.push({
-              BulkDatas: {
-                UPLOAD_SER_NO: "1",
-                CUST: 사업자등록번호?.replaceAll("-", ""),
-                EMP_CD: 전표담당자명,
-                WH_CD: 출하창고.value,
-                U_MEMO2: 신배송형태,
-                PROD_CD: 품목리스트[i].productInfo.PROD_CD,
-                PROD_DES: 품목리스트[i].productInfo.product,
-                SIZE_DES: (품목리스트[i].productInfo.itemType == 1 ? "DEMO 40%" : 품목리스트[i].productInfo.itemType == 2 ? "DEMO 50%" : "") + (품목리스트[i].productInfo.prop ? ", " + 품목리스트[i].productInfo.prop : ""),
-                QTY: 품목리스트[i].productInfo.qty,
-                PRICE: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1),
-                SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1) * Number(품목리스트[i].productInfo.qty),
-                VAT_AMT: (Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1)) * Number(품목리스트[i].productInfo.qty),
-                REMARKS: 신배송형태 == "대리배송" ? 품목리스트[i].deliveryInfo.name : "",
-              },
-            });
-          }
-          if (신배송형태 == "대리배송") {
-            bulkDatas.push({
-              BulkDatas: {
-                UPLOAD_SER_NO: "1",
-                CUST: 사업자등록번호?.replaceAll("-", ""),
-                EMP_CD: 전표담당자명,
-                WH_CD: 출하창고.value,
-                U_MEMO2: 신배송형태,
-                PROD_CD: "shipping1",
-                PROD_DES: "[택배비]",
-                QTY: 품목리스트.length,
-                PRICE: Math.round(6000 / 1.1),
-                SUPPLY_AMT: Math.round(6000 / 1.1) * 품목리스트.length,
-                VAT_AMT: (6000 - Math.round(6000 / 1.1)) * 품목리스트.length,
-                REMARKS: "",
-              },
-            });
-          }
-          const erpData = {
-            SaleOrderList: bulkDatas,
-          };
-          fetch("/page/save_saleorder.php?v2=true", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(erpData),
-          })
-            .then(async response => {
-              try {
-                const data = await response.json();
-                return data;
-              } catch (error) {
-                const text = await response.text();
-                throw new Error(`JSON 파싱 실패: ${text}`);
-              }
-            })
-            .then(result => {
-              if (result.status == "success" && result.data.Status == "200" && result.data.Data.FailCnt == 0) {
-                Swal.fire({
-                  icon: "success",
-                  title: "작업 성공",
-                  html: `
-											<code>${JSON.stringify(result.data.Data)}</code>
-											<hr />
-											<p>해당 발주서를 <strong>[접수]</strong> 처리하시겠습니까?</p>`,
-                  showCancelButton: true,
-                  confirmButtonText: "접수 처리",
-                  cancelButtonText: "아니오",
-                }).then(result => {
-                  if (result.isConfirmed) {
-                    //@ts-ignore
-                    const apiLocation = window.getAPILocation && window.getAPILocation();
-                    location.href = apiLocation;
-                  }
-                });
-              } else if (result.status == "success" && result.data.Status == "200" && result.data.Data.FailCnt != 0) {
-                Swal.fire({
-                  icon: "error",
-                  title: "일부 작업 실패",
-                  html: `<code>${JSON.stringify(result.data.Data.ResultDetails)}</code>`,
-                });
-              } else {
-                Swal.fire({
-                  icon: "error",
-                  title: "요청 실패",
-                  html: `<code>${JSON.stringify(result)}</code>`,
-                });
-              }
-            })
-            .catch(error => {
-              console.error("에러 발생:", error.message);
-            });
-        } else {
-          let today = new Date();
-          let 복사양식 = 품목리스트.reduce((acc, cur) => {
-            return (
-              acc +
-              (acc ? "\n" : "") +
-              [
-                today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
-                1, // order
-                사업자등록번호?.replaceAll("-", ""), // code
-                ,
-                //saupjaname
-                전표담당자명, // manager
-                출하창고.value, // warehouse
-                ,
-                ,
-                // type
-                // project
-                신배송형태, // deliver
-                ,
-                ,
-                ,
-                // currency
-                // exchange_rate
-                // payment
-                cur.productInfo.PROD_CD, // prod_cd
-                cur.productInfo.product, // prod_des
-                (cur.productInfo.itemType == 1 ? "DEMO 40%" : cur.productInfo.itemType == 2 ? "DEMO 50%" : "") + (cur.productInfo.prop ? ", " + cur.productInfo.prop : ""), // prod_size
-                ,
-                // prod_serial
-                cur.productInfo.qty, // prod_count
-                Math.round((cur.productInfo.dome_price ?? 0) / 1.1), // prod_price
-                0, // prod_curr_price
-                Math.round((cur.productInfo.dome_price ?? 0) / 1.1) * Number(cur.productInfo.qty), // prod_sup_price
-                (Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1)) * Number(cur.productInfo.qty), // prod_vat
-                신배송형태 == "대리배송" ? cur.deliveryInfo.name : "",
-              ].join("\t")
-            );
-          }, "");
-          if (신배송형태 == "대리배송") {
-            복사양식 =
-              복사양식 +
-              "\n" +
-              [
-                today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
-                1, // order
-                사업자등록번호?.replaceAll("-", ""), // code
-                ,
-                //saupjaname
-                전표담당자명, // manager
-                출하창고.value, // warehouse
-                ,
-                ,
-                // type
-                // project
-                "대리배송", // deliver
-                ,
-                ,
-                ,
-                // currency
-                // exchange_rate
-                // payment
-                "shipping1", // prod_cd
-                "[택배비]", // prod_des
-                ,
-                ,
-                // prod_size
-                // prod_serial
-                품목리스트.length, // prod_count
-                Math.round(6000 / 1.1), // prod_price
-                0, // prod_curr_price
-                Math.round(6000 / 1.1) * 품목리스트.length, // prod_sup_price
-                6000 - Math.round(6000 / 1.1), // prod_vat
-                "",
-              ].join("\t");
-          }
-          setTimeout(function () {
-            navigator.clipboard
-              .writeText(복사양식)
-              .then(() => {
-                Swal.fire({
-                  title: "웹자료 올리기 데이터가 복사되었습니다",
-                  html: "이카운트 > 주문서입력 > 웹자료올리기 버튼을 누르고<br />첫번째 칸에 붙여넣으세요.",
-                  confirmButtonText: "닫기",
-                  icon: "success",
-                  timer: 5000,
-                  timerProgressBar: true,
-                });
-              })
-              .catch(err => {
-                Swal.fire({
-                  title: "복사에 실패했습니다",
-                  html: "사유: <br />" + err,
-                  confirmButtonText: "닫기",
-                  icon: "error",
-                });
-              });
-          }, 300);
-        }
+    if (!전표담당자명) return;
+
+    const inputOptions = {
+      인천: "인천",
+      링고: "위탁(링고)",
+      소리: "위탁(소리샵)",
+      숲레: "위탁(숲레코드)",
+      사랩: "위탁(사운드랩스)",
+      하엔: "위탁(하이엔드오디오)",
+    };
+    const 출하창고 = await Swal.fire({
+      title: "출하창고를 선택하세요",
+      input: "radio",
+      inputOptions,
+      confirmButtonText: "선택 (더블클릭 쌉가능)",
+      inputValidator: value => {
+        if (!value) return "출하창고를 선택해야 합니다!";
+      },
+      didOpen: () => {
+        document.querySelector(".swal2-radio label")?.addEventListener("dblclick", () => {
+          (document.querySelector(".swal2-confirm") as HTMLButtonElement).click();
+        });
+        if (document.querySelector(".swal2-radio label:nth-child(1) input")) (document.querySelector(".swal2-radio label:nth-child(1) input") as HTMLInputElement).checked = true;
+      },
+    });
+
+    if (!출하창고.value) return;
+
+    if (api) {
+      let bulkDatas = new Array();
+      for (let i = 0; i < 품목리스트.length; i++) {
+        bulkDatas.push({
+          BulkDatas: {
+            UPLOAD_SER_NO: "1",
+            CUST: 사업자등록번호?.replaceAll("-", ""),
+            EMP_CD: 전표담당자명,
+            WH_CD: 출하창고.value,
+            U_MEMO2: 신배송형태,
+            PROD_CD: 품목리스트[i].productInfo.PROD_CD,
+            PROD_DES: 품목리스트[i].productInfo.product,
+            SIZE_DES: (품목리스트[i].productInfo.itemType == 1 ? "DEMO 40%" : 품목리스트[i].productInfo.itemType == 2 ? "DEMO 50%" : "") + (품목리스트[i].productInfo.prop ? ", " + 품목리스트[i].productInfo.prop : ""),
+            QTY: 품목리스트[i].productInfo.qty,
+            PRICE: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1),
+            SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1) * Number(품목리스트[i].productInfo.qty),
+            VAT_AMT: (Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1)) * Number(품목리스트[i].productInfo.qty),
+            REMARKS: 신배송형태 == "대리배송" ? 품목리스트[i].deliveryInfo.name : "",
+          },
+        });
       }
+      if (신배송형태 == "대리배송") {
+        bulkDatas.push({
+          BulkDatas: {
+            UPLOAD_SER_NO: "1",
+            CUST: 사업자등록번호?.replaceAll("-", ""),
+            EMP_CD: 전표담당자명,
+            WH_CD: 출하창고.value,
+            U_MEMO2: 신배송형태,
+            PROD_CD: "shipping1",
+            PROD_DES: "[택배비]",
+            QTY: 품목리스트.length,
+            PRICE: Math.round(6000 / 1.1),
+            SUPPLY_AMT: Math.round(6000 / 1.1) * 품목리스트.length,
+            VAT_AMT: (6000 - Math.round(6000 / 1.1)) * 품목리스트.length,
+            REMARKS: "",
+          },
+        });
+      }
+      const erpData = {
+        SaleOrderList: bulkDatas,
+      };
+
+      const responseSwal = Swal;
+
+      try {
+        responseSwal.fire({
+          title: "EPR 주문서 등록 중...",
+          showConfirmButton: false,
+          allowEscapeKey: false,
+          allowOutsideClick: false,
+        });
+
+        return;
+
+        const erpApiResponse = await fetch("/page/save_saleorder.php?v2=true", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(erpData),
+        });
+
+        if (!erpApiResponse.ok) throw new Error("서버 접속 실패.");
+
+        let erpApiResult;
+
+        try {
+          erpApiResult = await erpApiResponse.json();
+        } catch (e) {
+          erpApiResult = await erpApiResponse.text();
+          throw new Error(`JSON 파싱 실패: ${erpApiResult}`);
+        }
+
+        if (!erpApiResult) throw new Error("데이터 없음");
+
+        responseSwal.clickConfirm();
+
+        if (erpApiResult.status == "success" && erpApiResult.data.Status == "200" && erpApiResult.data.Data.FailCnt == 0) {
+          Swal.fire({
+            icon: "success",
+            title: "작업 성공",
+            html: `
+              <code>${JSON.stringify(erpApiResult.data.Data)}</code>
+              <hr />
+              <p>해당 발주서를 <strong>[접수]</strong> 처리하시겠습니까?</p>`,
+            showCancelButton: true,
+            confirmButtonText: "접수 처리",
+            cancelButtonText: "아니오",
+          }).then(result => {
+            if (result.isConfirmed) {
+              //@ts-ignore
+              const apiLocation = window.getAPILocation && window.getAPILocation();
+              location.href = apiLocation;
+            }
+          });
+        } else if (erpApiResult.status == "success" && erpApiResult.data.Status == "200" && erpApiResult.data.Data.FailCnt != 0) {
+          Swal.fire({
+            icon: "error",
+            title: "일부 작업 실패",
+            html: `<code>${JSON.stringify(erpApiResult.data.Data.erpApiResultDetails)}</code>`,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "요청 실패",
+            html: `<code>${JSON.stringify(erpApiResult)}</code>`,
+          });
+        }
+      } catch (e) {
+        console.error("에러 발생:", e);
+        responseSwal.clickCancel();
+      }
+    } else {
+      let today = new Date();
+      let 복사양식 = 품목리스트.reduce((acc, cur) => {
+        return (
+          acc +
+          (acc ? "\n" : "") +
+          [
+            today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
+            1, // order
+            사업자등록번호?.replaceAll("-", ""), // code
+            ,
+            //saupjaname
+            전표담당자명, // manager
+            출하창고.value, // warehouse
+            ,
+            ,
+            // type
+            // project
+            신배송형태, // deliver
+            ,
+            ,
+            ,
+            // currency
+            // exchange_rate
+            // payment
+            cur.productInfo.PROD_CD, // prod_cd
+            cur.productInfo.product, // prod_des
+            (cur.productInfo.itemType == 1 ? "DEMO 40%" : cur.productInfo.itemType == 2 ? "DEMO 50%" : "") + (cur.productInfo.prop ? ", " + cur.productInfo.prop : ""), // prod_size
+            ,
+            // prod_serial
+            cur.productInfo.qty, // prod_count
+            Math.round((cur.productInfo.dome_price ?? 0) / 1.1), // prod_price
+            0, // prod_curr_price
+            Math.round((cur.productInfo.dome_price ?? 0) / 1.1) * Number(cur.productInfo.qty), // prod_sup_price
+            (Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1)) * Number(cur.productInfo.qty), // prod_vat
+            신배송형태 == "대리배송" ? cur.deliveryInfo.name : "",
+          ].join("\t")
+        );
+      }, "");
+      if (신배송형태 == "대리배송") {
+        복사양식 =
+          복사양식 +
+          "\n" +
+          [
+            today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
+            1, // order
+            사업자등록번호?.replaceAll("-", ""), // code
+            ,
+            //saupjaname
+            전표담당자명, // manager
+            출하창고.value, // warehouse
+            ,
+            ,
+            // type
+            // project
+            "대리배송", // deliver
+            ,
+            ,
+            ,
+            // currency
+            // exchange_rate
+            // payment
+            "shipping1", // prod_cd
+            "[택배비]", // prod_des
+            ,
+            ,
+            // prod_size
+            // prod_serial
+            품목리스트.length, // prod_count
+            Math.round(6000 / 1.1), // prod_price
+            0, // prod_curr_price
+            Math.round(6000 / 1.1) * 품목리스트.length, // prod_sup_price
+            6000 - Math.round(6000 / 1.1), // prod_vat
+            "",
+          ].join("\t");
+      }
+      setTimeout(function () {
+        navigator.clipboard
+          .writeText(복사양식)
+          .then(() => {
+            Swal.fire({
+              title: "웹자료 올리기 데이터가 복사되었습니다",
+              html: "이카운트 > 주문서입력 > 웹자료올리기 버튼을 누르고<br />첫번째 칸에 붙여넣으세요.",
+              confirmButtonText: "닫기",
+              icon: "success",
+              timer: 5000,
+              timerProgressBar: true,
+            });
+          })
+          .catch(err => {
+            Swal.fire({
+              title: "복사에 실패했습니다",
+              html: "사유: <br />" + err,
+              confirmButtonText: "닫기",
+              icon: "error",
+            });
+          });
+      }, 300);
     }
   }
 
@@ -857,9 +878,7 @@
                     type="text"
                     id="id_{인덱스}_sell_price"
                     value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.sell_price))}
-                    oninput={e => {
-                      가격계산(e, 품목, "소비자가");
-                    }}
+                    oninput={e => 가격계산(e, 품목, "소비자가")}
                     onpointerup={e => e.currentTarget.select()}
                     readonly={!품목.editable} />
                 </div>
@@ -879,9 +898,7 @@
                     type="text"
                     id="id_{인덱스}_dome_price"
                     value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.dome_price))}
-                    oninput={e => {
-                      가격계산(e, 품목, "공급단가");
-                    }}
+                    oninput={e => 가격계산(e, 품목, "공급단가")}
                     onpointerup={e => e.currentTarget.select()}
                     readonly={!품목.editable} />
                 </div>
@@ -905,9 +922,7 @@
                     data-label="개"
                     id="id_{인덱스}_qty"
                     value={new Intl.NumberFormat("ko-KR").format(Math.floor(Number(품목.productInfo.qty)))}
-                    oninput={e => {
-                      가격계산(e, 품목, "수량");
-                    }}
+                    oninput={e => 가격계산(e, 품목, "수량")}
                     onpointerup={e => e.currentTarget.select()}
                     readonly={!품목.editable} />
                 </div>
@@ -924,9 +939,7 @@
                   type="text"
                   id="id_{인덱스}_margin"
                   value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.margin))}
-                  oninput={e => {
-                    가격계산(e, 품목, "마진");
-                  }}
+                  oninput={e => 가격계산(e, 품목, "마진")}
                   onpointerup={e => e.currentTarget.select()}
                   readonly={!품목.editable} />
               </div>
