@@ -30,7 +30,7 @@
   };
 
   type 제품정보타입 = {
-    itemType: 0 | 1 | 2;
+    itemType: 0 | 1 | 2 | 3;
     brand: string | undefined;
     product: string | undefined;
     PROD_CD: string | undefined;
@@ -640,6 +640,16 @@
                 bind:group={품목.productInfo.itemType}
                 disabled />
               <span>데모(50%)</span>
+            </label>
+            <label class="app_radio">
+              <input
+                type="radio"
+                id="id_{인덱스}_itemType4"
+                name="itemType_{인덱스}"
+                value={3}
+                bind:group={품목.productInfo.itemType}
+                disabled />
+              <span>특별건</span>
             </label>
           </div>
           <div class="gap">&nbsp;</div>
