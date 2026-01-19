@@ -517,79 +517,37 @@
   });
 </script>
 
-<div
-  class="app_container"
-  bind:this={컨테이너}>
+<div class="app_container" bind:this={컨테이너}>
   <div class="order_info app_row">
-    <div
-      class="app_col"
-      style="--flex-basis: 20%;">
+    <div class="app_col" style="--flex-basis: 20%;">
       <div>
-        <label
-          for="delivery_type"
-          class="app_label block">배송형태</label>
+        <label for="delivery_type" class="app_label block">배송형태</label>
       </div>
-      <input
-        type="text"
-        id="delivery_type"
-        value={배송형태}
-        readonly />
+      <input type="text" id="delivery_type" value={배송형태} readonly />
     </div>
-    <div
-      class="app_col"
-      style="--flex-basis: 20%;">
+    <div class="app_col" style="--flex-basis: 20%;">
       <div>
-        <label
-          for="order_type"
-          class="app_label block">발주제품군</label>
+        <label for="order_type" class="app_label block">발주제품군</label>
       </div>
-      <input
-        type="text"
-        id="order_type"
-        value={발주제품군}
-        readonly />
+      <input type="text" id="order_type" value={발주제품군} readonly />
     </div>
-    <div
-      class="app_col"
-      style="--flex-basis: 20%;">
+    <div class="app_col" style="--flex-basis: 20%;">
       <div>
-        <label
-          for="change_saupja"
-          class="app_label block">사업자등록번호 변경</label>
+        <label for="change_saupja" class="app_label block">사업자등록번호 변경</label>
       </div>
-      <input
-        type="checkbox"
-        id="change_saupja"
-        value={사업자변경}
-        disabled />
+      <input type="checkbox" id="change_saupja" value={사업자변경} disabled />
     </div>
-    <div
-      class="app_col"
-      style="--flex-basis: 20%;">
+    <div class="app_col" style="--flex-basis: 20%;">
       <div>
-        <label
-          for="saupjamyeong"
-          class="app_label block">사업자명</label>
+        <label for="saupjamyeong" class="app_label block">사업자명</label>
       </div>
-      <input
-        type="text"
-        id="saupjamyeong"
-        value={사업자명}
-        readonly />
+      <input type="text" id="saupjamyeong" value={사업자명} readonly />
     </div>
-    <div
-      class="app_col"
-      style="--flex-basis: 20%;">
+    <div class="app_col" style="--flex-basis: 20%;">
       <div>
-        <label
-          for="saupja"
-          class="app_label block">사업자등록번호</label>
+        <label for="saupja" class="app_label block">사업자등록번호</label>
       </div>
-      <input
-        type="text"
-        id="saupja"
-        value={사업자등록번호}
-        readonly />
+      <input type="text" id="saupja" value={사업자등록번호} readonly />
     </div>
   </div>
   <div class="prod_list">
@@ -603,62 +561,29 @@
           품목재고파악(품목);
         }}>
         <div class="app_header">
-          <button
-            type="button"
-            class="arcodian"
-            onclick={() => (품목.collapsed = !품목.collapsed)}
-            aria-label="품목 접기/펼치기"
-            title="품목 접기/펼치기">{@html 품목.collapsed ? `<i class="fas fa-chevron-right"></i>` : `<i class="fas fa-chevron-down"></i>`}</button>
+          <button type="button" class="arcodian" onclick={() => (품목.collapsed = !품목.collapsed)} aria-label="품목 접기/펼치기" title="품목 접기/펼치기">{@html 품목.collapsed ? `<i class="fas fa-chevron-right"></i>` : `<i class="fas fa-chevron-down"></i>`}</button>
           <span class="item_title"><strong>품목{인덱스 + 1}</strong></span><span class="hori_div"></span>
           <div class="radio_vertical">
             <label class="app_radio">
-              <input
-                type="radio"
-                id="id_{인덱스}_itemType1"
-                name="itemType_{인덱스}"
-                value={0}
-                bind:group={품목.productInfo.itemType}
-                disabled />
+              <input type="radio" id="id_{인덱스}_itemType1" name="itemType_{인덱스}" value={0} bind:group={품목.productInfo.itemType} disabled />
               <span>일반</span>
             </label>
             <label class="app_radio">
-              <input
-                type="radio"
-                id="id_{인덱스}_itemType2"
-                name="itemType_{인덱스}"
-                value={1}
-                bind:group={품목.productInfo.itemType}
-                disabled />
+              <input type="radio" id="id_{인덱스}_itemType2" name="itemType_{인덱스}" value={1} bind:group={품목.productInfo.itemType} disabled />
               <span>데모(40%)</span>
             </label>
             <label class="app_radio">
-              <input
-                type="radio"
-                id="id_{인덱스}_itemType3"
-                name="itemType_{인덱스}"
-                value={2}
-                bind:group={품목.productInfo.itemType}
-                disabled />
+              <input type="radio" id="id_{인덱스}_itemType3" name="itemType_{인덱스}" value={2} bind:group={품목.productInfo.itemType} disabled />
               <span>데모(50%)</span>
             </label>
             <label class="app_radio">
-              <input
-                type="radio"
-                id="id_{인덱스}_itemType4"
-                name="itemType_{인덱스}"
-                value={3}
-                bind:group={품목.productInfo.itemType}
-                disabled />
+              <input type="radio" id="id_{인덱스}_itemType4" name="itemType_{인덱스}" value={3} bind:group={품목.productInfo.itemType} disabled />
               <span>특별건</span>
             </label>
           </div>
           <div class="gap">&nbsp;</div>
           <div class="action">
-            <label for="임시편집_{인덱스}"
-              ><input
-                type="checkbox"
-                id="임시편집_{인덱스}"
-                onchange={() => (품목.editable = !품목.editable)} /> 임시편집</label>
+            <label for="임시편집_{인덱스}"><input type="checkbox" id="임시편집_{인덱스}" onchange={() => (품목.editable = !품목.editable)} /> 임시편집</label>
             <label for="출고처리_{인덱스}"
               ><input
                 type="checkbox"
@@ -677,133 +602,61 @@
           </div>
         </div>
         {#if !품목.collapsed}
-          <div
-            class="app_body"
-            transition:fly={{ y: -10, duration: 100 }}>
+          <div class="app_body" transition:fly={{ y: -10, duration: 100 }}>
             {#if 배송형태 && ["대리배송", "익일수령택배", "퀵착불"].includes(배송형태)}
               <div class="deliveryInfo app_row">
-                <div
-                  class="app_col"
-                  style="--flex-basis: 33%;">
+                <div class="app_col" style="--flex-basis: 33%;">
                   <div>
-                    <label
-                      for="id_{인덱스}_name"
-                      class="app_label block">고객명</label>
+                    <label for="id_{인덱스}_name" class="app_label block">고객명</label>
                   </div>
-                  <input
-                    type="text"
-                    id="id_{인덱스}_name"
-                    bind:value={품목.deliveryInfo.name}
-                    readonly={!품목.editable} />
+                  <input type="text" id="id_{인덱스}_name" bind:value={품목.deliveryInfo.name} readonly={!품목.editable} />
                 </div>
-                <div
-                  class="app_col"
-                  style="--flex-basis: 33%;">
+                <div class="app_col" style="--flex-basis: 33%;">
                   <div>
-                    <label
-                      for="id_{인덱스}_hp1"
-                      class="app_label block">전화번호1</label>
+                    <label for="id_{인덱스}_hp1" class="app_label block">전화번호1</label>
                   </div>
-                  <input
-                    type="text"
-                    id="id_{인덱스}_hp1"
-                    bind:value={품목.deliveryInfo.hp1}
-                    readonly={!품목.editable} />
+                  <input type="text" id="id_{인덱스}_hp1" bind:value={품목.deliveryInfo.hp1} readonly={!품목.editable} />
                 </div>
-                <div
-                  class="app_col"
-                  style="--flex-basis: 33%;">
+                <div class="app_col" style="--flex-basis: 33%;">
                   <div>
-                    <label
-                      for="id_{인덱스}_hp2"
-                      class="app_label block">전화번호2</label>
+                    <label for="id_{인덱스}_hp2" class="app_label block">전화번호2</label>
                   </div>
-                  <input
-                    type="text"
-                    id="id_{인덱스}_hp2"
-                    bind:value={품목.deliveryInfo.hp2}
-                    readonly={!품목.editable} />
+                  <input type="text" id="id_{인덱스}_hp2" bind:value={품목.deliveryInfo.hp2} readonly={!품목.editable} />
                 </div>
-                <div
-                  class="app_col"
-                  style="--flex-basis: 100%;">
+                <div class="app_col" style="--flex-basis: 100%;">
                   <div class="app_label block">
                     <span style="margin-right: 0.5em">주소</span>
                     <button onclick={() => 배송정보복사(품목)}>배송정보 복사</button>
                   </div>
                 </div>
-                <div
-                  class="app_col"
-                  style="--flex-basis: 50%">
-                  <input
-                    type="text"
-                    placeholder="우편번호"
-                    bind:value={품목.deliveryInfo.postcode}
-                    readonly={!품목.editable} />
+                <div class="app_col" style="--flex-basis: 50%">
+                  <input type="text" placeholder="우편번호" bind:value={품목.deliveryInfo.postcode} readonly={!품목.editable} />
                 </div>
-                <div
-                  class="app_col"
-                  style="--flex-basis: 50%">
-                  <input
-                    type="text"
-                    placeholder="배송메시지"
-                    bind:value={품목.deliveryInfo.msg}
-                    readonly={!품목.editable} />
+                <div class="app_col" style="--flex-basis: 50%">
+                  <input type="text" placeholder="배송메시지" bind:value={품목.deliveryInfo.msg} readonly={!품목.editable} />
                 </div>
-                <div
-                  class="app_col"
-                  style="--flex-basis: 100%">
-                  <input
-                    type="text"
-                    placeholder="기본주소"
-                    bind:value={품목.deliveryInfo.addr1}
-                    readonly={!품목.editable} />
+                <div class="app_col" style="--flex-basis: 100%">
+                  <input type="text" placeholder="기본주소" bind:value={품목.deliveryInfo.addr1} readonly={!품목.editable} />
                 </div>
-                <div
-                  class="app_col"
-                  style="--flex-basis: 50%">
-                  <input
-                    type="text"
-                    placeholder="상세주소"
-                    bind:value={품목.deliveryInfo.addr2}
-                    readonly={!품목.editable} />
+                <div class="app_col" style="--flex-basis: 50%">
+                  <input type="text" placeholder="상세주소" bind:value={품목.deliveryInfo.addr2} readonly={!품목.editable} />
                 </div>
-                <div
-                  class="app_col"
-                  style="--flex-basis: 50%">
-                  <input
-                    type="text"
-                    placeholder="참고항목"
-                    bind:value={품목.deliveryInfo.addr3}
-                    readonly={!품목.editable} />
+                <div class="app_col" style="--flex-basis: 50%">
+                  <input type="text" placeholder="참고항목" bind:value={품목.deliveryInfo.addr3} readonly={!품목.editable} />
                 </div>
               </div>
               <hr />
             {/if}
             <div class="prodInfo app_row">
-              <div
-                class="app_col"
-                style="--flex-basis: 20%;">
+              <div class="app_col" style="--flex-basis: 20%;">
                 <div>
-                  <label
-                    for="id_{인덱스}_brand"
-                    class="app_label block">브랜드</label>
+                  <label for="id_{인덱스}_brand" class="app_label block">브랜드</label>
                 </div>
-                <input
-                  type="text"
-                  class="noteditable"
-                  id="id_{인덱스}_brand"
-                  onpointerup={e => e.currentTarget.select()}
-                  bind:value={품목.productInfo.brand}
-                  readonly />
+                <input type="text" class="noteditable" id="id_{인덱스}_brand" onpointerup={e => e.currentTarget.select()} bind:value={품목.productInfo.brand} readonly />
               </div>
-              <div
-                class="app_col"
-                style="--flex-basis: {품목.productInfo.useprop || 품목.productInfo.PROD_CD == 'etc_001' ? '40' : '80'}%;">
+              <div class="app_col" style="--flex-basis: {품목.productInfo.useprop || 품목.productInfo.PROD_CD == 'etc_001' ? '40' : '80'}%;">
                 <div>
-                  <label
-                    for="id_{인덱스}_product"
-                    class="app_label block"
+                  <label for="id_{인덱스}_product" class="app_label block"
                     >품목명 <span style="font-size: 0.9em;font-weight: normal"
                       ><code>({품목.productInfo.PROD_CD})</code>
                       <button
@@ -847,127 +700,52 @@
                     </span>
                   </label>
                 </div>
-                <input
-                  type="text"
-                  class="noteditable"
-                  id="id_{인덱스}_product"
-                  onpointerup={e => e.currentTarget.select()}
-                  bind:value={품목.productInfo.product}
-                  readonly />
+                <input type="text" class="noteditable" id="id_{인덱스}_product" onpointerup={e => e.currentTarget.select()} bind:value={품목.productInfo.product} readonly />
               </div>
               {#if 품목.productInfo.useprop || 품목.productInfo.PROD_CD == "etc_001"}
-                <div
-                  class="app_col"
-                  style="--flex-basis: 40%;">
+                <div class="app_col" style="--flex-basis: 40%;">
                   <div>
-                    <label
-                      for="id_{인덱스}_prop"
-                      class="app_label block">옵션</label>
+                    <label for="id_{인덱스}_prop" class="app_label block">옵션</label>
                   </div>
-                  <input
-                    type="text"
-                    id="id_{인덱스}_prop"
-                    onpointerup={e => e.currentTarget.select()}
-                    bind:value={품목.productInfo.prop} />
+                  <input type="text" id="id_{인덱스}_prop" onpointerup={e => e.currentTarget.select()} bind:value={품목.productInfo.prop} />
                 </div>
               {/if}
-              <div
-                class="app_col"
-                style="--flex-basis: 20%;">
+              <div class="app_col" style="--flex-basis: 20%;">
                 <div>
-                  <label
-                    for="id_{인덱스}_sell_price"
-                    class="app_label block">소비자가</label>
+                  <label for="id_{인덱스}_sell_price" class="app_label block">소비자가</label>
                 </div>
-                <div
-                  class="app_text_input"
-                  data-label="원">
-                  <input
-                    type="text"
-                    id="id_{인덱스}_sell_price"
-                    value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.sell_price))}
-                    oninput={e => 가격계산(e, 품목, "소비자가")}
-                    onpointerup={e => e.currentTarget.select()}
-                    readonly={!품목.editable} />
+                <div class="app_text_input" data-label="원">
+                  <input type="text" id="id_{인덱스}_sell_price" value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.sell_price))} oninput={e => 가격계산(e, 품목, "소비자가")} onpointerup={e => e.currentTarget.select()} readonly={!품목.editable} />
                 </div>
               </div>
-              <div
-                class="app_col"
-                style="--flex-basis: 20%;">
+              <div class="app_col" style="--flex-basis: 20%;">
                 <div>
-                  <label
-                    for="id_{인덱스}_dome_price"
-                    class="app_label block">공급단가</label>
+                  <label for="id_{인덱스}_dome_price" class="app_label block">공급단가</label>
                 </div>
-                <div
-                  class="app_text_input"
-                  data-label="원">
-                  <input
-                    type="text"
-                    id="id_{인덱스}_dome_price"
-                    value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.dome_price))}
-                    oninput={e => 가격계산(e, 품목, "공급단가")}
-                    onpointerup={e => e.currentTarget.select()}
-                    readonly={!품목.editable} />
+                <div class="app_text_input" data-label="원">
+                  <input type="text" id="id_{인덱스}_dome_price" value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.dome_price))} oninput={e => 가격계산(e, 품목, "공급단가")} onpointerup={e => e.currentTarget.select()} readonly={!품목.editable} />
                 </div>
               </div>
-              <div
-                class="app_col"
-                style="--flex-basis: 10%;">
+              <div class="app_col" style="--flex-basis: 10%;">
                 <div>
-                  <label
-                    for="id_{인덱스}_qty"
-                    class="app_label block"
-                    >수량
-                  </label>
+                  <label for="id_{인덱스}_qty" class="app_label block">수량 </label>
                 </div>
-                <div
-                  class="app_text_input"
-                  data-label="개">
-                  <input
-                    type="text"
-                    class="app_text_input"
-                    data-label="개"
-                    id="id_{인덱스}_qty"
-                    value={new Intl.NumberFormat("ko-KR").format(Math.floor(Number(품목.productInfo.qty)))}
-                    oninput={e => 가격계산(e, 품목, "수량")}
-                    onpointerup={e => e.currentTarget.select()}
-                    readonly={!품목.editable} />
+                <div class="app_text_input" data-label="개">
+                  <input type="text" class="app_text_input" data-label="개" id="id_{인덱스}_qty" value={new Intl.NumberFormat("ko-KR").format(Math.floor(Number(품목.productInfo.qty)))} oninput={e => 가격계산(e, 품목, "수량")} onpointerup={e => e.currentTarget.select()} readonly={!품목.editable} />
                 </div>
               </div>
-              <div
-                class="app_col"
-                style="--flex-basis: 10%;">
+              <div class="app_col" style="--flex-basis: 10%;">
                 <div>
-                  <label
-                    for="id_{인덱스}_margin"
-                    class="app_label block">마진(%)</label>
+                  <label for="id_{인덱스}_margin" class="app_label block">마진(%)</label>
                 </div>
-                <input
-                  type="text"
-                  id="id_{인덱스}_margin"
-                  value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.margin))}
-                  oninput={e => 가격계산(e, 품목, "마진")}
-                  onpointerup={e => e.currentTarget.select()}
-                  readonly={!품목.editable} />
+                <input type="text" id="id_{인덱스}_margin" value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.margin))} oninput={e => 가격계산(e, 품목, "마진")} onpointerup={e => e.currentTarget.select()} readonly={!품목.editable} />
               </div>
-              <div
-                class="app_col"
-                style="--flex-basis: 40%;">
+              <div class="app_col" style="--flex-basis: 40%;">
                 <div>
-                  <label
-                    for="id_{인덱스}_total_dome"
-                    class="app_label block">공급합계</label>
+                  <label for="id_{인덱스}_total_dome" class="app_label block">공급합계</label>
                 </div>
-                <div
-                  class="app_text_input"
-                  data-label="원">
-                  <input
-                    type="text"
-                    id="id_{인덱스}_total_dome"
-                    value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.total_dome))}
-                    onpointerup={e => e.currentTarget.select()}
-                    readonly />
+                <div class="app_text_input" data-label="원">
+                  <input type="text" id="id_{인덱스}_total_dome" value={new Intl.NumberFormat("ko-KR").format(Number(품목.productInfo.total_dome))} onpointerup={e => e.currentTarget.select()} readonly />
                 </div>
               </div>
             </div>
@@ -977,13 +755,9 @@
     {/each}
   </div>
   <div class="app_footer app_row">
-    <div
-      class="app_col"
-      style="display: flex; align-items:center; justify-content: flex-end;">
+    <div class="app_col" style="display: flex; align-items:center; justify-content: flex-end;">
       <div style="margin: 0; padding: 0.5em 0.5em calc(0.5em - 1px); border: 1px solid #ddd; border-right: none; box-sizing: border-box; background: #eee; border-radius: 4px 0 0 4px">총합계</div>
-      <div
-        class="app_text_input"
-        data-label="원">
+      <div class="app_text_input" data-label="원">
         <input
           style="margin: 0; width: unset; border: 1px solid #ddd; border-radius: 0 4px 4px 0"
           type="text"
@@ -991,7 +765,7 @@
           value={new Intl.NumberFormat("ko-KR").format(
             품목리스트.reduce((val, x) => {
               return val + (x.productInfo.total_dome ?? 0);
-            }, 0)
+            }, 0),
           )} />
       </div>
     </div>
@@ -1014,10 +788,7 @@
     </details>
     <p>&nbsp</p>
     <p style="text-align:center">
-      <img
-        alt="복사예제"
-        src={copyExample}
-        style="width:100%" />
+      <img alt="복사예제" src={copyExample} style="width:100%" />
     </p></Portal>
 {/if}
 
