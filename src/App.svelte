@@ -251,6 +251,7 @@
       숲레: "위탁(숲레코드)",
       사랩: "위탁(사운드랩스)",
       하엔: "위탁(하이엔드오디오)",
+      etc: "직접입력",
     };
     const 출하창고 = await Swal.fire({
       title: "출하창고를 선택하세요",
@@ -270,6 +271,26 @@
 
     if (!출하창고.value) return;
 
+    let 출하창고값 = 출하창고.value;
+
+    if (출하창고.value == "etc") {
+      const 기타출하창고입력 = await Swal.fire({
+        title: "출하창고코드를 입력하세요.",
+        input: "text",
+        showCancelButton: true,
+        confirmButtonText: "확인",
+        cancelButtonText: "취소",
+        inputValidator: value => {
+          if (!value) return "출하창고코드를 입력하세요!";
+        },
+        preConfirm: text => {
+          출하창고값 = text;
+        },
+      });
+
+      if (!출하창고값) return;
+    }
+
     if (api) {
       let bulkDatas = new Array();
       for (let i = 0; i < 품목리스트.length; i++) {
@@ -278,7 +299,7 @@
             UPLOAD_SER_NO: "1",
             CUST: 사업자등록번호?.replaceAll("-", ""),
             EMP_CD: 전표담당자명,
-            WH_CD: 출하창고.value,
+            WH_CD: 출하창고값,
             U_MEMO2: 신배송형태,
             PROD_CD: 품목리스트[i].productInfo.PROD_CD,
             PROD_DES: 품목리스트[i].productInfo.product,
@@ -297,7 +318,7 @@
             UPLOAD_SER_NO: "1",
             CUST: 사업자등록번호?.replaceAll("-", ""),
             EMP_CD: 전표담당자명,
-            WH_CD: 출하창고.value,
+            WH_CD: 출하창고값,
             U_MEMO2: 신배송형태,
             PROD_CD: "shipping1",
             PROD_DES: "[택배비]",
@@ -384,78 +405,68 @@
     } else {
       let today = new Date();
       let 복사양식 = 품목리스트.reduce((acc, cur) => {
-        return (
-          acc +
-          (acc ? "\n" : "") +
-          [
-            today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
-            1, // order
-            사업자등록번호?.replaceAll("-", ""), // code
-            ,
-            //saupjaname
-            전표담당자명, // manager
-            출하창고.value, // warehouse
-            ,
-            ,
-            // type
-            // project
-            신배송형태, // deliver
-            ,
-            ,
-            ,
-            // currency
-            // exchange_rate
-            // payment
-            cur.productInfo.PROD_CD, // prod_cd
-            cur.productInfo.product, // prod_des
-            (cur.productInfo.itemType == 1 ? "DEMO 40%" : cur.productInfo.itemType == 2 ? "DEMO 50%" : "") + (cur.productInfo.prop ? ", " + cur.productInfo.prop : ""), // prod_size
-            ,
-            // prod_serial
-            cur.productInfo.qty, // prod_count
-            Math.round((cur.productInfo.dome_price ?? 0) / 1.1), // prod_price
-            0, // prod_curr_price
-            Math.round((cur.productInfo.dome_price ?? 0) / 1.1) * Number(cur.productInfo.qty), // prod_sup_price
-            (Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1)) * Number(cur.productInfo.qty), // prod_vat
-            신배송형태 == "대리배송" ? cur.deliveryInfo.name : "",
-          ].join("\t")
-        );
+        const array = [
+          {
+            일자: today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"),
+          },
+          { 순번: 1 },
+          { 거래처코드: 사업자등록번호?.replaceAll("-", "") },
+          { 거래처명: "" },
+          { 담당자: 전표담당자명 },
+          { 출하창고: 출하창고값 },
+          { 거래유형: "" },
+          { 프로젝트: "" },
+          { 배송형태: 신배송형태 },
+          { 통화: "" },
+          { 환율: "" },
+          { 결제소매: "" },
+          { 납기일자: "" },
+          { 품목코드: cur.productInfo.PROD_CD },
+          { 품목명: cur.productInfo.product },
+          { 규격: (cur.productInfo.itemType == 1 ? "DEMO 40%" : cur.productInfo.itemType == 2 ? "DEMO 50%" : "") + (cur.productInfo.prop ? ", " + cur.productInfo.prop : "") },
+          { 시리얼로트: "" },
+          { 수량: cur.productInfo.qty },
+          { 단가: Math.round((cur.productInfo.dome_price ?? 0) / 1.1) },
+          { 외화금액: 0 },
+          { 공급가액: Math.round((cur.productInfo.dome_price ?? 0) / 1.1) * Number(cur.productInfo.qty) },
+          { 부가세: (Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1)) * Number(cur.productInfo.qty) },
+          { 적요: 신배송형태 == "대리배송" ? cur.deliveryInfo.name : "" },
+        ];
+        return acc + (acc ? "\n" : "") + array.map(x => Object.values(x)[0]).join("\t");
       }, "");
       if (신배송형태 == "대리배송") {
         복사양식 =
           복사양식 +
           "\n" +
           [
-            today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"), // date
-            1, // order
-            사업자등록번호?.replaceAll("-", ""), // code
-            ,
-            //saupjaname
-            전표담당자명, // manager
-            출하창고.value, // warehouse
-            ,
-            ,
-            // type
-            // project
-            "대리배송", // deliver
-            ,
-            ,
-            ,
-            // currency
-            // exchange_rate
-            // payment
-            "shipping1", // prod_cd
-            "[택배비]", // prod_des
-            ,
-            ,
-            // prod_size
-            // prod_serial
-            품목리스트.length, // prod_count
-            Math.round(6000 / 1.1), // prod_price
-            0, // prod_curr_price
-            Math.round(6000 / 1.1) * 품목리스트.length, // prod_sup_price
-            6000 - Math.round(6000 / 1.1), // prod_vat
-            "",
-          ].join("\t");
+            {
+              일자: today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"),
+            },
+            { 순번: 1 },
+            { 거래처코드: 사업자등록번호?.replaceAll("-", "") },
+            { 거래처명: "" },
+            { 담당자: 전표담당자명 },
+            { 출하창고: 출하창고값 },
+            { 거래유형: "" },
+            { 프로젝트: "" },
+            { 배송형태: "대리배송" },
+            { 통화: "" },
+            { 환율: "" },
+            { 결제소매: "" },
+            { 납기일자: "" },
+            { 품목코드: "shipping1" },
+            { 품목명: "[택배비]" },
+            { 규격: "" },
+            { 시리얼로트: "" },
+            { 수량: 품목리스트.length },
+            { 단가: Math.round(6000 / 1.1) },
+            { 외화금액: 0 },
+            { 공급가액: Math.round(6000 / 1.1) * 품목리스트.length },
+            { 부가세: 6000 - Math.round(6000 / 1.1) },
+            { 적요: "" },
+          ]
+            .map(x => Object.values(x)[0])
+            .join("\t");
       }
       setTimeout(function () {
         navigator.clipboard
@@ -656,9 +667,10 @@
               </div>
               <div class="app_col" style="--flex-basis: {품목.productInfo.useprop || 품목.productInfo.PROD_CD == 'etc_001' ? '40' : '80'}%;">
                 <div>
-                  <label for="id_{인덱스}_product" class="app_label block"
-                    >품목명 <span style="font-size: 0.9em;font-weight: normal"
-                      ><code>({품목.productInfo.PROD_CD})</code>
+                  <label for="id_{인덱스}_product" class="app_label block">
+                    품목명
+                    <span style="font-size: 0.9em;font-weight: normal">
+                      <code>({품목.productInfo.PROD_CD})</code>
                       <button
                         class="text_btn"
                         onclick={async () => {
