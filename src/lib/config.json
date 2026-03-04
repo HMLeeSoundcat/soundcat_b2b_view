@@ -1,0 +1,28 @@
+{
+  "ERP_FIELDS": [
+    { "label": "일자", "use": true },
+    { "label": "순번", "use": true },
+    { "label": "거래처코드", "use": true },
+    { "label": "거래처명", "use": true },
+    { "label": "담당자", "use": true },
+    { "label": "출하창고", "use": true },
+    { "label": "거래유형", "use": true },
+    { "label": "프로젝트", "use": true },
+    { "label": "배송형태", "use": true },
+    { "label": "통화", "use": true },
+    { "label": "환율", "use": true },
+    { "label": "결제소매", "use": true },
+    { "label": "납기일자", "use": true },
+    { "label": "품목코드", "use": true },
+    { "label": "품목명", "use": true },
+    { "label": "규격", "use": true },
+    { "label": "시리얼로트", "use": true },
+    { "label": "수량", "use": true },
+    { "label": "단가VAT포함", "use": false },
+    { "label": "단가", "use": true },
+    { "label": "외화금액", "use": true },
+    { "label": "공급가액", "use": true },
+    { "label": "부가세", "use": true },
+    { "label": "적요", "use": true }
+  ]
+}

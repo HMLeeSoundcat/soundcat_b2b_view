@@ -8,6 +8,7 @@
   import type SwalType from "sweetalert2";
   import Portal from "svelte-portal";
   import copyExample from "./lib/example.png";
+  import configUrl from "./lib/config.json?url";
 
   // write 모듈과 거의 동일한데, 값 입력 기능이 빠지고 여러 입력에 필요한 기능들이 빠져 좀 더 가볍다.
 
@@ -108,6 +109,22 @@
 
   let 복사양식: string | undefined = $state();
   let 복사팝업열림: boolean = $state(false);
+
+  let view_config:
+    | {
+        ERP_FIELDS: {
+          label: string;
+          use: boolean;
+        }[];
+      }
+    | undefined = undefined;
+
+  let ERP_FIELD_ORDER: string[] | undefined = $state();
+
+  function ERP행문자열생성(행데이터: Record<string, string | number | undefined>) {
+    if (!ERP_FIELD_ORDER) return "";
+    return ERP_FIELD_ORDER.map(label => (행데이터[label] ?? "").toString()).join("\t");
+  }
 
   async function 가격계산(e: Event, 품목: 품목리스트항목타입, 필드: string) {
     const 가능한필드 = ["소비자가", "공급단가", "수량", "마진"];
@@ -305,6 +322,7 @@
             PROD_DES: 품목리스트[i].productInfo.product,
             SIZE_DES: (품목리스트[i].productInfo.itemType == 1 ? "DEMO 40%" : 품목리스트[i].productInfo.itemType == 2 ? "DEMO 50%" : "") + (품목리스트[i].productInfo.prop ? ", " + 품목리스트[i].productInfo.prop : ""),
             QTY: 품목리스트[i].productInfo.qty,
+            USER_PRICE_VAT: Number(품목리스트[i].productInfo.dome_price ?? 0),
             PRICE: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1),
             SUPPLY_AMT: Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1) * Number(품목리스트[i].productInfo.qty),
             VAT_AMT: (Number(품목리스트[i].productInfo.dome_price ?? 0) - Math.round(Number(품목리스트[i].productInfo.dome_price ?? 0) / 1.1)) * Number(품목리스트[i].productInfo.qty),
@@ -322,6 +340,7 @@
             U_MEMO2: 신배송형태,
             PROD_CD: "shipping1",
             PROD_DES: "[택배비]",
+            USER_PRICE_VAT: 6000,
             QTY: 품목리스트.length,
             PRICE: Math.round(6000 / 1.1),
             SUPPLY_AMT: Math.round(6000 / 1.1) * 품목리스트.length,
@@ -405,68 +424,65 @@
     } else {
       let today = new Date();
       let 복사양식 = 품목리스트.reduce((acc, cur) => {
-        const array = [
-          {
-            일자: today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"),
-          },
-          { 순번: 1 },
-          { 거래처코드: 사업자등록번호?.replaceAll("-", "") },
-          { 거래처명: "" },
-          { 담당자: 전표담당자명 },
-          { 출하창고: 출하창고값 },
-          { 거래유형: "" },
-          { 프로젝트: "" },
-          { 배송형태: 신배송형태 },
-          { 통화: "" },
-          { 환율: "" },
-          { 결제소매: "" },
-          { 납기일자: "" },
-          { 품목코드: cur.productInfo.PROD_CD },
-          { 품목명: cur.productInfo.product },
-          { 규격: (cur.productInfo.itemType == 1 ? "DEMO 40%" : cur.productInfo.itemType == 2 ? "DEMO 50%" : "") + (cur.productInfo.prop ? ", " + cur.productInfo.prop : "") },
-          { 시리얼로트: "" },
-          { 수량: cur.productInfo.qty },
-          { 단가: Math.round((cur.productInfo.dome_price ?? 0) / 1.1) },
-          { 외화금액: 0 },
-          { 공급가액: Math.round((cur.productInfo.dome_price ?? 0) / 1.1) * Number(cur.productInfo.qty) },
-          { 부가세: (Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1)) * Number(cur.productInfo.qty) },
-          { 적요: 신배송형태 == "대리배송" ? cur.deliveryInfo.name : "" },
-        ];
-        return acc + (acc ? "\n" : "") + array.map(x => Object.values(x)[0]).join("\t");
+        const 행데이터 = {
+          일자: today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"),
+          순번: 1,
+          거래처코드: 사업자등록번호?.replaceAll("-", ""),
+          거래처명: "",
+          담당자: 전표담당자명,
+          출하창고: 출하창고값,
+          거래유형: "",
+          프로젝트: "",
+          배송형태: 신배송형태,
+          통화: "",
+          환율: "",
+          결제소매: "",
+          납기일자: "",
+          품목코드: cur.productInfo.PROD_CD,
+          품목명: cur.productInfo.product,
+          규격: (cur.productInfo.itemType == 1 ? "DEMO 40%" : cur.productInfo.itemType == 2 ? "DEMO 50%" : "") + (cur.productInfo.prop ? ", " + cur.productInfo.prop : ""),
+          시리얼로트: "",
+          수량: cur.productInfo.qty,
+          단가VAT포함: Math.round(cur.productInfo.dome_price ?? 0),
+          단가: Math.round((cur.productInfo.dome_price ?? 0) / 1.1),
+          외화금액: 0,
+          공급가액: Math.round((cur.productInfo.dome_price ?? 0) / 1.1) * Number(cur.productInfo.qty),
+          부가세: (Math.round(cur.productInfo.dome_price ?? 0) - Math.round((cur.productInfo.dome_price ?? 0) / 1.1)) * Number(cur.productInfo.qty),
+          적요: 신배송형태 == "대리배송" ? cur.deliveryInfo.name : "",
+        };
+
+        return acc + (acc ? "\n" : "") + ERP행문자열생성(행데이터);
       }, "");
       if (신배송형태 == "대리배송") {
         복사양식 =
           복사양식 +
           "\n" +
-          [
-            {
-              일자: today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"),
-            },
-            { 순번: 1 },
-            { 거래처코드: 사업자등록번호?.replaceAll("-", "") },
-            { 거래처명: "" },
-            { 담당자: 전표담당자명 },
-            { 출하창고: 출하창고값 },
-            { 거래유형: "" },
-            { 프로젝트: "" },
-            { 배송형태: "대리배송" },
-            { 통화: "" },
-            { 환율: "" },
-            { 결제소매: "" },
-            { 납기일자: "" },
-            { 품목코드: "shipping1" },
-            { 품목명: "[택배비]" },
-            { 규격: "" },
-            { 시리얼로트: "" },
-            { 수량: 품목리스트.length },
-            { 단가: Math.round(6000 / 1.1) },
-            { 외화금액: 0 },
-            { 공급가액: Math.round(6000 / 1.1) * 품목리스트.length },
-            { 부가세: 6000 - Math.round(6000 / 1.1) },
-            { 적요: "" },
-          ]
-            .map(x => Object.values(x)[0])
-            .join("\t");
+          ERP행문자열생성({
+            일자: today.getFullYear().toString() + (today.getMonth() + 1).toString().padStart(2, "0") + today.getDate().toString().padStart(2, "0"),
+            순번: 1,
+            거래처코드: 사업자등록번호?.replaceAll("-", ""),
+            거래처명: "",
+            담당자: 전표담당자명,
+            출하창고: 출하창고값,
+            거래유형: "",
+            프로젝트: "",
+            배송형태: "대리배송",
+            통화: "",
+            환율: "",
+            결제소매: "",
+            납기일자: "",
+            품목코드: "shipping1",
+            품목명: "[택배비]",
+            규격: "",
+            시리얼로트: "",
+            수량: 품목리스트.length,
+            단가VAT포함: 6000,
+            단가: Math.round(6000 / 1.1),
+            외화금액: 0,
+            공급가액: Math.round(6000 / 1.1) * 품목리스트.length,
+            부가세: 6000 - Math.round(6000 / 1.1),
+            적요: "",
+          });
       }
       setTimeout(function () {
         navigator.clipboard
@@ -517,6 +533,9 @@
 
     //@ts-ignore
     if (window.getSaupja) [사업자명, 사업자등록번호] = window.getSaupja();
+
+    view_config = await fetch(configUrl).then(r => r.json());
+    ERP_FIELD_ORDER = view_config?.ERP_FIELDS.filter((f: { use: boolean }) => f.use).map((f: { label: string }) => f.label);
   });
 
   $effect(() => {
